@@ -1,5 +1,5 @@
 # sentiment analysis
-#funkcija mora obvezno prejeti tekstovni DF, ki mora imeti na prvem mestu ID, na drugem pa text
+#funkcija mora obvezno prejeti tekstovni DF, ki mora imeti na prvem mestu ID, na drugem pa text fff
 
 doSentiment<-function(lexDF,textDF,join=FALSE)
 {
