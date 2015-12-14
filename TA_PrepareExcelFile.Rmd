@@ -1,0 +1,122 @@
+---
+title: "PripravaDatotekeTripAdvisor"
+output: html_document
+---
+
+```{r message=FALSE,echo=FALSE,results='hide',warning=FALSE}
+source("TripFunctionsForDataFile_Preparing.R")
+
+
+opts_chunk$set(fig.width=12,fig.path="Figs/", 
+               echo=FALSE, warning=FALSE, message=FALSE)
+
+opts_chunk$set(dev="png", 
+               dev.args=list(type="cairo"),
+               dpi=300)
+
+
+
+```
+
+###Priprava skupne datoteke
+```{r}
+hoteli=read.csv(file="Hoteli.csv",sep=";",header=TRUE,stringsAsFactors=FALSE)
+hotelid=gsub(" ","",paste(hoteli$Lokacija,hoteli$Hotel,sep=""), fixed=TRUE)
+hoteli=cbind(hoteli,hotelid)
+
+hotellist=as.list(hoteli$hotelid)
+
+dfrating.l=lapply(hotellist,
+                  function(x) {
+                    filenm=paste("dfrating_",x,".Rda",sep="")
+                    load(filenm)
+                    return(list(dfrating=dfrating,
+                                top3records=head(dfrating,3),
+                                numrevs=nrow(dfrating),
+                                freqRating=table(dfrating$ratingnum)))
+                  })
+
+names(dfrating.l)=hotellist
+
+```
+
+###Izračun sentimenta
+```{r}
+AllList=list()
+#najprej zberem vse podatke skupaj
+for(i in 1:length(hotellist))
+{
+  hotel=hotellist[i]
+  
+  
+  
+  
+  AllList[[i]]=dfrating.l[[i]]$dfrating[,c("ratingdt","rating","ratingnum","fullrev",
+                                           "rlocation","rtitle","rAll","rH","rC",
+                                           "Hotel","Regija","Lokacija")]
+
+}
+dtAll=do.call(rbind,AllList)
+
+list=as.list(dtAll$fullrev)
+sentimentAll=list()
+
+for (i in 1:length(list))  
+{
+sentimentAll[[i]]=getSentiment(list[[i]])
+
+}
+
+sentimentAll1=do.call(rbind,sentimentAll)
+
+dtAll=cbind(dtAll,sentimentAll1)
+
+```
+
+###Izračun čustev in polarizacije
+```{r}
+review=as.list(dtAll[,c(4)])
+
+
+sentimentBayes=list()
+
+
+# tekste analiziram
+
+for (i in 1:length(review))
+{
+  
+print(i)  
+  
+sentimentBayes[[i]]=getSentimentBayes(review[[i]])
+
+
+}
+
+sentimentBayes=do.call(rbind,sentimentBayes)
+
+
+dtAll=cbind(dtAll,sentimentBayes[,2:3])
+
+colnames(dtAll)[1] <- "Datum ocene"
+colnames(dtAll)[2] <- "Ocena od"
+colnames(dtAll)[3] <- "ocena"
+colnames(dtAll)[4] <- "Review"
+colnames(dtAll)[5] <- "Ocenjevalec prihaja iz"
+colnames(dtAll)[6] <- "Ocenjevalec ima na TripAdvisorju oceno"
+colnames(dtAll)[7] <- "Stevilo vseh ocen"
+colnames(dtAll)[8] <- "Stevilo ocen hotelov"
+colnames(dtAll)[9] <- "Koristnost ocen"
+colnames(dtAll)[10] <- "Naziv hotela"
+colnames(dtAll)[11] <- "Regija"
+colnames(dtAll)[12] <- "Mesto"
+colnames(dtAll)[13] <- "Sentiment"
+colnames(dtAll)[14] <- "Stevilo besed"
+colnames(dtAll)[15] <- "Custvo"
+colnames(dtAll)[16] <- "Polarizacija"
+
+
+write.xlsx(x = dtAll, file = "TripAdvisorHrvaska.xlsx",
+           sheetName = "Data", row.names = FALSE, append=FALSE)
+```
+

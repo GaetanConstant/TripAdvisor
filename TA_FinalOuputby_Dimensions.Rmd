@@ -1,0 +1,138 @@
+---
+title: "TA_SLO"
+output:
+  html_document:
+    toc: yes
+---
+
+```{r message=FALSE,echo=FALSE,warning=FALSE}
+library("tm")
+library("knitr")
+library("data.table")
+library("xlsx")
+library("xtable")
+library("topicmodels")
+library("LDAvis")
+library("servr")
+library("syuzhet")
+library("pander")
+library("ggplot2")
+
+source("TAFunctions.R")
+
+opts_chunk$set(fig.width=12,fig.path="SLO/", 
+               echo=FALSE, warning=FALSE, message=FALSE)
+
+opts_chunk$set(dev="png", 
+               dev.args=list(type="cairo"),
+               dpi=300)
+
+
+#preberem AFINN
+lexDF=as.data.frame(read.csv(file="AFINN.csv", header=FALSE, sep=";"))
+textDF=read.csv(file="TA.csv", header=TRUE, sep=";", stringsAsFactors=FALSE)
+
+
+
+
+
+```
+#Regije
+
+
+###Najpogostej?e besede in mre?e
+```{r message=FALSE,echo=FALSE,warning=FALSE}
+    # regije=as.list(unique(textDF[,15]))   
+
+      regije=as.list(c("hrana","mesto"))
+
+
+      sapply(regije,function(x) {textDF1=textDF[textDF[,15]==x & textDF[,14]=="1",]
+                             
+                             textDF1=as.data.frame(textDF1[,4])
+                             colnames(textDF1)<-c("text")
+                             
+                             print("Regija")
+                             print(x)
+                             
+                             doFrequentWords(textDF1,0.3)
+                             
+                             })  
+   
+
+```
+
+
+
+
+
+###Sentiment z AFINN metodo
+```{r message=FALSE,echo=FALSE,warning=FALSE}
+
+#samo enkrat naredim, da naredim AFINN metodo za vse tekste
+#  result=doSentiment(lexDF,as.data.frame(textDF[,4]),join=TRUE)
+#  textDF=cbind(textDF,result[,2])
+#  
+#  write.xlsx(x = textDF, file = "TripAdvisorSlovenija.xlsx",
+#            sheetName = "Data", row.names = FALSE, append=FALSE)
+ 
+########################
+
+  
+
+
+  sapply(regije,function(x) {textDF1=textDF[textDF[,15]==x & textDF[,14]==1,]
+                             
+                             textDF1=as.data.frame(textDF1[,4])
+                             colnames(textDF1)<-c("text")
+                             
+                             print("Regija")
+                             print(x)
+                             
+                             doSentiment(lexDF,textDF1)
+                             
+                             })  
+
+```
+
+###LDA z več iteracij
+```{r}
+
+   sapply(regije,function(x) {textDF1=textDF[textDF[,15]==x & textDF[,14]==1,]
+                              
+                             textDF1=as.data.frame(textDF1[,4])
+                             colnames(textDF1)<-c("text")
+                             
+                             print("Regija")
+                             print(x)
+                             
+                             doLDA(2,textDF1)
+                             
+                             })  
+
+   
+
+```
+
+
+
+###Syuzhet z NRC pristopom
+```{r}
+
+   sapply(regije,function(x) {textDF1=textDF[textDF[,15]==x & textDF[,14]==1,]
+                              
+                             textDF1=as.data.frame(textDF1[,4])
+                             colnames(textDF1)<-c("text")
+                             
+                             print("Regija")
+                             print(x)
+                             
+                             doSyu(textDF1)
+                             
+                             })  
+
+   
+
+```
+
+

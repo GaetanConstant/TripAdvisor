@@ -1,0 +1,116 @@
+---
+title: "FinalOutput_General"
+output:
+  html_document:
+    toc: yes
+---
+
+```{r message=FALSE,echo=FALSE,warning=FALSE}
+library("tm")
+library("knitr")
+library("data.table")
+library("xlsx")
+library("xtable")
+library("topicmodels")
+library("LDAvis")
+library("servr")
+library("syuzhet")
+library("pander")
+library("ggplot2")
+source("TAFunctions.R")
+
+opts_chunk$set(fig.width=12,fig.path="TA/", 
+               echo=FALSE, warning=FALSE, message=FALSE)
+
+opts_chunk$set(dev="png", 
+               dev.args=list(type="cairo"),
+               dpi=300)
+
+
+#preberem AFINN
+lexDF=as.data.frame(read.csv(file="AFINN.csv", header=FALSE, sep=";"))
+textDF=read.csv(file="TA.csv", header=TRUE, sep=";", stringsAsFactors=FALSE)
+
+
+
+
+
+
+
+```
+
+
+
+###Najpogostejse besede
+```{r}
+    
+                             textDF1=textDF[,4]
+
+                           
+                            
+                             
+                             doFrequentWords(textDF1,0.6)
+
+```
+
+
+
+###Sentiment z AFINN metodo
+```{r message=FALSE,echo=FALSE,warning=FALSE}
+
+#samo enkrat naredim, da naredim AFINN metodo za vse tekste
+#  result=doSentiment(lexDF,as.data.frame(textDF[,4]),join=TRUE)
+#  textDF=cbind(textDF,result[,2])
+#  
+#  write.xlsx(x = textDF, file = "TripAdvisor.xlsx",
+#            sheetName = "Data", row.names = FALSE, append=FALSE)
+ 
+########################
+
+   
+                             
+                             textDF1=as.data.frame(textDF[,4])
+                             colnames(textDF1)<-c("text")    
+                             
+                             doSentiment(lexDF,textDF1)
+                             
+                          
+
+```
+
+###LDA z več iteracijami
+```{r}
+
+  
+                              
+                             textDF1=as.data.frame(textDF[,4])
+
+                             colnames(textDF1)<-c("text") 
+                             
+                             doLDA(2,textDF1)
+                             
+                            
+
+   
+
+```
+
+
+
+###Syuzhet z NRC pristopom
+```{r}
+
+ 
+                              
+                             textDF1=as.data.frame(textDF[,4])
+
+                             colnames(textDF1)<-c("text")
+                             
+                             doSyu(textDF1)
+                          
+
+   
+
+```
+
+
