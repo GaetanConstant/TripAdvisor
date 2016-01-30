@@ -6,6 +6,7 @@ library(lubridate)
 library(ggplot2)
 library(pryr)
 library(rvest)
+library(xlsx)
 library("zoo")
 source("AuxiliaryDownloadFunctions.R")
 
@@ -32,8 +33,8 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 1:length(hotelsid)) 
-{
+for (stevec in 5:length(hotelsid)) 
+  {
   
   #stevec=1
   
@@ -59,7 +60,8 @@ for (stevec in 1:length(hotelsid))
   
   for (i in 1:(length(urllink))) {
     
-    ##if (i>1) {break}
+    ##if (1) {break}
+    print("Korak...")
     print(i)
     dfrating.l[[i]] = try(getTAdata(urllink[i], worldcities))
     if (length(dfrating.l[[i]])==0) {break}
@@ -68,6 +70,7 @@ for (stevec in 1:length(hotelsid))
   
   
   dfrating = try(do.call(rbind, dfrating.l))
+  names(dfrating)
   
   
   
@@ -90,3 +93,29 @@ for (stevec in 1:length(hotelsid))
   try(gc())
   
 } 
+
+
+#Vse skupaj dam v eno datoteko
+datoteke<- list.files( pattern="*.Rda", full.names=FALSE)
+datoteke<-gsub(".Rda","",datoteke)
+try(rm(podatki_s), silent = TRUE)
+try(rm(podatki), silent = TRUE)
+
+
+podatki_s=lapply(datoteke,function(x) {
+  filenm=paste(as.character(x),".Rda",sep="")
+  
+  if (file.exists(filenm))
+  {
+    load(filenm)
+    return(dfrating)
+    
+  }
+})
+
+##celotne podatke izvozim v Excelovo datoteko
+podatki=as.data.frame(try(do.call(rbind,podatki_s)))
+write.xlsx(x = podatki, file = "TA.xlsx",
+           sheetName = "Podatki", row.names = FALSE, append=FALSE)
+
+

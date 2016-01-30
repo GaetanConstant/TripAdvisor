@@ -273,6 +273,9 @@ getTAdata<-function(url,worldcities)
       if (length(rloc)==0){
         rloc = NA
       }
+      if (length(rloc)==1 & nchar(rloc)==0) {
+        rloc = gsub("",NA,rloc)
+      }
       rlocation = c(rlocation, rloc)
       rlocation = rlocation[!rlocation %in% c("")]
       
@@ -354,10 +357,19 @@ getTAdata<-function(url,worldcities)
     }
   }
   
+  rAllReviewes=as.numeric(rAllReviewes)
+  rHot=as.numeric(rHot)
+  rAttr=as.numeric(rAttr)
+  rFood=as.numeric(rFood)
+  rHel=as.numeric(rHel)
   
   
   tmpDF <- data.frame(id, quote, rating, date, fullrev, rlocation, rLevel, rAllReviewes, rHot,rAttr,rFood, rHel,rStarost,rGender,rPoint, rTags, stringsAsFactors = FALSE)
   tmpDF[, "drzava"] <- NA
+  
+  colnames(tmpDF) <- c("id","quote","rating","date","fullrev","location","contributor_level","All_reviews","Hotel_reviews",
+                       "Attraction_reviews","Restaurant_reviews","Helpful_reviews","Member_since","Gender","TA_points",
+                       "Tags","State")
   
   # poiščemo državo
   
