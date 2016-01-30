@@ -79,7 +79,7 @@ getFullRev <- function(id) {
 getTAdata<-function(url,worldcities)
 {
   
-  try(rm(tmpDF))
+  try(rm(tmpDF), silent = TRUE)
   tmpDF=c("")
   
   
@@ -100,9 +100,9 @@ getTAdata<-function(url,worldcities)
   
   
   # Novi datumi
-  date1 <- try(reviews %>% html_node(".relativeDate") %>% html_attr("title"))
+  date1 <- try(reviews %>% html_node(".relativeDate") %>% html_attr("title"), silent = TRUE)
   
-  date1 <- try(as.Date((monthR(gsub("\n", "", date1))), "%B %d, %Y"))
+  date1 <- try(as.Date((monthR(gsub("\n", "", date1))), "%B %d, %Y"), silent = TRUE)
   
   if (class(date1) != "Date") {
     date1 <- NA
@@ -113,9 +113,9 @@ getTAdata<-function(url,worldcities)
   
   
   # Za nazaj datumi
-  date2 <- try(reviews %>% html_node(".ratingDate") %>% html_attr("title"))
+  date2 <- try(reviews %>% html_node(".ratingDate") %>% html_attr("title"), silent = TRUE)
   
-  date2 <- try(as.Date((monthR(gsub("\n", "", date2))), "%B %d, %Y"))
+  date2 <- try(as.Date((monthR(gsub("\n", "", date2))), "%B %d, %Y"), silent = TRUE)
   
   if (class(date2) != "Date") {
     date2 <- NA
@@ -124,9 +124,9 @@ getTAdata<-function(url,worldcities)
   date2 <- date2[!is.na(date2)]
   
   
-  date3 <- try(gsub("Reviewed ", "", reviews %>% html_node(".ratingDate") %>% html_text()))
+  date3 <- try(gsub("Reviewed ", "", reviews %>% html_node(".ratingDate") %>% html_text()), silent = TRUE)
   
-  date3 <- try(as.Date((monthR(gsub("\n", "", date3))), "%B %d, %Y"))
+  date3 <- try(as.Date((monthR(gsub("\n", "", date3))), "%B %d, %Y"), silent = TRUE)
   
   
   if (class(date3) != "Date") {
@@ -152,12 +152,6 @@ getTAdata<-function(url,worldcities)
   member_info <- url %>% read_html() %>% html_nodes("#REVIEWS .col1of2")
   
   
-  # Lokacija
-  rlocation <- gsub("\n", "", member_info %>% html_nodes(".location") %>% html_text())
-  
-  
-  # število vseh recenzij
-  rAll <- gsub("\\D", "", member_info %>% html_nodes(".reviewerBadge") %>% html_text(), perl = TRUE) %>% as.integer()
   
   
   # Moram it eno pa po eno, ker ni nujno,d a imajo vsi naslednje metapodatke
@@ -174,6 +168,8 @@ getTAdata<-function(url,worldcities)
   rGender=c("")
   rFood=c("")
   rTags=c("")
+  rlocation=c("")
+  rAllReviewes=c("")
   
   if (length(ids) > 0) {
     
@@ -187,7 +183,7 @@ getTAdata<-function(url,worldcities)
       {
         
         urlM<-gsub("\n","",paste("http://www.tripadvisor.com/members/",ruse,sep=""))
-        member<-try(urlM %>% read_html()%>% html_nodes("#MODULES_MEMBER_CENTER"))
+        member<-try(urlM %>% read_html()%>% html_nodes("#MODULES_MEMBER_CENTER"), silent = TRUE)
       } else
         
       {
@@ -199,7 +195,7 @@ getTAdata<-function(url,worldcities)
       #Točk
       
       
-      points<-try(member%>% html_nodes(".memberPointInfo .points")%>% html_text())
+      points<-try(member%>% html_nodes(".memberPointInfo .points")%>% html_text(), silent = TRUE)
       
       points=as.integer(gsub("\\D","",points))
       
@@ -211,7 +207,7 @@ getTAdata<-function(url,worldcities)
       
       
       #Član od
-      rStar<-try(member%>% html_nodes(".ageSince .since")%>% html_text())
+      rStar<-try(member%>% html_nodes(".ageSince .since")%>% html_text(), silent = TRUE)
       
       if (length(rStar) > 0) {
         
@@ -242,7 +238,7 @@ getTAdata<-function(url,worldcities)
       rGender = rGender[!rGender %in% c("")]
       
       #Tagi
-      rT<-try(member%>% html_nodes(".tagBlock .tagBubble")%>% html_text())
+      rT<-try(member%>% html_nodes(".tagBlock .tagBubble")%>% html_text(), silent = TRUE)
       
       if (length(rT) > 0 && (class(rT)!="try-error")) {
         
@@ -257,13 +253,13 @@ getTAdata<-function(url,worldcities)
       rTags = rTags[!rTags %in% c("")]
       
       # Značka
-      rlev <- try(member_info[[i]] %>% html_nodes(".levelBadge") %>% html_attr("class"))
+      rlev <- try(member_info[[i]] %>% html_nodes(".levelBadge") %>% html_attr("class"), silent = TRUE)
       
       if (length(rlev) > 0) {
         
         rlev <- gsub("levelBadge badge lvl_", "", rlev)
         
-        rlev = try(as.integer(rlev))
+        rlev = try(as.integer(rlev), silent = TRUE)
       } else {
         rlev = NA
       }
@@ -271,9 +267,27 @@ getTAdata<-function(url,worldcities)
       rLevel = rLevel[!rLevel %in% c("")]
       
       
+      # Lokacija
+      rloc <- gsub("\n", "", member_info[[i]] %>% html_nodes(".location") %>% html_text())
+      
+      if (length(rloc)==0){
+        rloc = NA
+      }
+      rlocation = c(rlocation, rloc)
+      rlocation = rlocation[!rlocation %in% c("")]
+      
+      
+      # število vseh recenzij
+      rAll <- gsub("\\D", "", member_info[[i]] %>% html_nodes(".reviewerBadge") %>% html_text(), perl = TRUE) %>% as.integer()
+      
+      if (length(rAll)==0){
+        rAll = NA
+      }
+      rAllReviewes = c(rAllReviewes, rAll)
+      rAllReviewes = rAllReviewes[!rAllReviewes %in% c("")]
       
       # Število hotelskih recenzij
-      rHotels <- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text())
+      rHotels <- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text(), silent = TRUE)
       
       if (length(rHotels) > 0) {
         
@@ -289,7 +303,7 @@ getTAdata<-function(url,worldcities)
       
       
       # Število recenzij atrakcij
-      rAttraction<- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text())
+      rAttraction<- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text(), silent = TRUE)
       
       if (length(rAttraction) > 0) {
         
@@ -305,7 +319,7 @@ getTAdata<-function(url,worldcities)
       
       
       # Število recenzij restavracij
-      rFod<- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text())
+      rFod<- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text(), silent = TRUE)
       
       if (length(rFod) > 0) {
         
@@ -342,7 +356,7 @@ getTAdata<-function(url,worldcities)
   
   
   
-  tmpDF <- data.frame(id, quote, rating, date, fullrev, rlocation, rLevel, rAll, rHot,rAttr,rFood, rHel,rStarost,rGender,rPoint, rTags, stringsAsFactors = FALSE)
+  tmpDF <- data.frame(id, quote, rating, date, fullrev, rlocation, rLevel, rAllReviewes, rHot,rAttr,rFood, rHel,rStarost,rGender,rPoint, rTags, stringsAsFactors = FALSE)
   tmpDF[, "drzava"] <- NA
   
   # poiščemo državo
@@ -350,7 +364,7 @@ getTAdata<-function(url,worldcities)
   for (f in 1:nrow(tmpDF)) {
     
     
-    print(f)
+    #print(f)
     # f=3
     
     lokacija <- as.list(unlist(strsplit(tmpDF[f, 6], "[,]")))
