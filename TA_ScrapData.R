@@ -1,11 +1,13 @@
 library(rvest)
 library(XML)
-source(AuxiliaryDownloadFunctions.R)
-
-
+library("zoo")
+source("AuxiliaryDownloadFunctions.R")
+ 
+  worldcities=read.csv(file="worldcities.csv",header = TRUE, stringsAsFactors = FALSE)
   
-  url="http://www.tripadvisor.com/Attraction_Review-g274873-d298666-Reviews-Ljubljana_Old_Town-Ljubljana_Upper_Carniola_Region.html#REVIEWS"
+  head(worldcities)
   
+  url="http://www.tripadvisor.com/Hotel_Review-g274873-d456147-Reviews-Grand_Hotel_Union-Ljubljana_Upper_Carniola_Region.html#REVIEWS"
   
   reviews <- url %>%
     read_html() %>%
@@ -25,196 +27,213 @@ source(AuxiliaryDownloadFunctions.R)
     gsub(" of 5 stars", "", .) %>%
     as.integer()
   
-  date <- reviews %>%
-    html_node(".relativeDate") %>%
-    html_attr("title") 
-
-  date <-as.Date((monthR(gsub("\n","",date))),"%B %d, %Y")
+ 
+  #Novi datumi
+  date1 <- try(reviews %>%
+                      html_node(".relativeDate") %>%
+                      html_attr("title"))
   
+  date1 <-try(as.Date((monthR(gsub("\n","",date1))),"%B %d, %Y"))
+  
+  if (class(date1)!="Date") {
+    date1<-NA }
+  
+  date1 <- date1[!is.na(date1)]
+  
+  
+  
+  #Za nazaj datumi
+  date2 <- try(reviews %>%
+                 html_node(".ratingDate") %>%
+                 html_attr("title"))
+  
+  date2 <-try(as.Date((monthR(gsub("\n","",date2))),"%B %d, %Y"))
+  
+  if (class(date2)!="Date") {
+       date2<-NA}
+  
+  date2 <- date2[!is.na(date2)]
+  
+  
+  date3 <- try(gsub("Reviewed ","",reviews %>%
+    html_node(".ratingDate") %>%
+    html_text()))
+  
+  date3 <-try(as.Date((monthR(gsub("\n","",date3))),"%B %d, %Y"))
+  
+  
+  if (class(date3)!="Date") {
+    date3<-NA}
+  
+  date3 <- date3[!is.na(date3)]
+  
+  #Združim datume
+        if (identical(date1,date2))
+        {
+          date=date1
+            } else {
+           date<- as.Date(c(date1,date2, date3))
+             }
+ 
   
 
   fullrev<-sapply(as.list(id),getFullRev)
   
-
   
-
+  #meta podatki recenzentov
   
-  
-  
-  # get html page content
-  doc=htmlTreeParse(urllink,useInternalNodes=TRUE)
-  
-  ## get node sets
-  # review id
-  ns_id=getNodeSet(doc,"//div[@id='REVIEWS']/div[@class='reviewSelector  ' or @class='reviewSelector   track_back']") 
-  #Reviever location"
-  
-  # top quote for a review
-  ns_topquote=getNodeSet(doc,"//div[@id='REVIEWS']//span[@class='noQuotes']") 
-  # get partial entry for review that shows in the page
-  ns_partialentry=getNodeSet(doc,"//div[@class='col2of2']//p[@class='partial_entry'][1]")
-  # date of rating
-  ns_ratingdt=getNodeSet(doc,"//div[@class='col2of2']//span[@class='ratingDate relativeDate' or @class='ratingDate']")
-  # rating (number of stars)
-  ns_rating=getNodeSet(doc,"//div[@class='col2of2']//span[@class='rate sprite-rating_s rating_s']/img[@alt]")
-  
-  # get actual values extracted from node sets
-  # review id
-  id=sapply(ns_id,function(x) gsub("review_","",xmlAttrs(x)["id"]))
+  member_info <- url %>%
+                   read_html() %>%
+                     html_nodes("#REVIEWS .col1of2")
+    
+   
+  #Lokacija
+  rlocation <- gsub("\n","",member_info %>%
+                      html_nodes(".location") %>% 
+                      html_text()) 
   
   
-  
-  # top quote for the review
-  topquote=sapply(ns_topquote,function(x) xmlValue(x))
-  
-  #Odstranim grafične elemente
-  topquote=gsub("[^[:graph:]]", " ",topquote) 
-  
-  # rating date (couple of formats seem to be used and hence a and b below)
-  ratingdta=sapply(ns_ratingdt,function(x) xmlAttrs(x)["title"])
-  ratingdtb=sapply(ns_ratingdt,function(x) xmlValue(x))
-  # rating (number of stars)
-  rating=sapply(ns_rating,function(x) xmlAttrs(x)["alt"])
-  # partial entry for review
-  partialentry=sapply(ns_partialentry,function(x) xmlValue(x))
-  
-  # get rating date in date format
-  ratingdt.pick=ratingdta
-  ratingdt.pick[is.na(ratingdta)]=ratingdtb[is.na(ratingdta)]
-  tmpDate=gsub("Reviewed ","",ratingdt.pick)
-  ratingdt=as.Date((monthR(gsub("\n","",tmpDate))),"%B %d, %Y")
+  #število vseh recenzij
+  rAll <- gsub("\\D","",member_info %>%
+                   html_nodes(".reviewerBadge") %>% 
+                   html_text(), perl = TRUE) %>%
+                      as.integer()
   
   
-  dfr <- data.frame(location=character(),
-                    Title=character(),
-                    AllReviews=numeric(), 
-                    HotelReviews=numeric(),
-                    Contribution=numeric(),
-                    stringsAsFactors=FALSE) 
-  
-  
+  #Moram it eno pa po eno, ker ni nujno,d a imajo vsi naslednje metapodatke
   
   ids=as.list(id)
   
-  if (length(topquote)>0)
-  {
-    
-    #going through ids
-    for (m in 1:length(topquote))
-    {
-      
-      
-      idr=ids[[m]]
-      
-      idlink=paste("//div[@id='review_",idr,"']",sep="")
-      
-      #preverim, ali je že slučajno google translate. Če je, grem ven
-      ns_google=getNodeSet(doc,paste(idlink,"//div[@class='col1of2']//div[contains(@class, 'googleTranslation')]",sep=""))
-      
-      #Reviwers location
-      ns_rlocation=getNodeSet(doc,paste(idlink,"//div[@class='col1of2']//div[@class='location']",sep=""))
-      
-      
-      #Reviwers title
-      ns_rtitle=getNodeSet(doc,paste(idlink,"//div[@class='col1of2']//div[contains(@class, 'levelBadge')]",sep=""))
-      
-      
-      if (length(ns_rtitle)>0) {
-        ns_level=ns_rtitle %>% html_attr("class")}
-      
-      #AllReviews
-      ns_rAll=getNodeSet(doc,paste(idlink,"//div[@class='col1of2']//div[contains(@class,'reviewerBadge')]",sep=""))
-      
-      
-      #Hotel reviews
-      ns_rH=getNodeSet(doc,paste(idlink,"//div[@class='col1of2']//div[contains(@class,'contributionReviewBadge')]",sep=""))
-      
-      
-      
-      #Contribution helpfulVotesBadge badge no_cpu
-      ns_rC=getNodeSet(doc,paste(idlink,"//div[@class='col1of2']//div[contains(@class,'helpfulVotesBadge')]",sep=""))
-      
-      
-      #location of reviewer    
-      if (length(ns_rlocation)==0)
-      {rlocation="Unknown"} else
-      {    
-        rlocation=sapply(ns_rlocation,function(x) xmlValue(x))
-        rlocation=gsub("\n","",rlocation)
-      }
-      
-      #Še enkrat preverim rlocation
-      if (nchar(rlocation)<1)
-      {
-        rlocation="Uknown"
-      }
-      
-      #Reviwer title  
-      if (length(ns_rtitle)==0)
-      {
-        rtitle="Unknown"} else
-        {
-          
-          
-          rtitle=sapply(ns_rtitle,function(x) xmlValue(x))
-          rtitle=gsub("\nLevel","",rtitle)
-          rtitle=gsub(" ","",rtitle)
-          
-          if (length(ns_level)>0)
-          {
-            rlevel=gsub("levelBadge badge lvl_","",ns_level)
-            rtitle=paste("Level ",rlevel," ",rtitle,sep="")}
-          
-          
-        }  
-      
-      #All reviews ns_rAll
-      
-      if (length(ns_rAll)==0)
-      {rAll=0} else
-      {
-        rAll=gsub(" review","",sapply(ns_rAll,function(x) xmlValue(x)), fixed=TRUE)
-        rAll=as.numeric(gsub("s","",rAll,fixed=TRUE))   
-      }
-      
-      #Hotel reviws
-      
-      if (length(ns_rH)==0)
-      {rH=0} else
-      {
-        rH=gsub(" review","",sapply(ns_rH,function(x) xmlValue(x)), fixed=TRUE)
-        rH=gsub(" hotel","",rH,fixed=TRUE)
-        rH=as.numeric(gsub("s","",rH,fixed=TRUE))
-      }  
-      
-      
-      #Contribution
-      if (length(ns_rC)==0)
-      {rC=0} else
-      {
-        rC=gsub(" helpful vote","",sapply(ns_rC,function(x) xmlValue(x)), fixed=TRUE)
-        rC=as.numeric(gsub("s","",rC,fixed=TRUE))
-        
-      }  
-      
-      
-      dfr=rbind(dfr,data.frame(rlocation,rtitle,rAll,rH,rC))
-      
-    }
-    
-  } 
-  if ((length(topquote)==0) || (!length(topquote)==length(id)) || (length(ratingdt)==0))
-  {dfrating=as.data.frame(NULL)}
+  rHot=c("")
+  rHel=c("")
+  rLevel=c("")
   
-  else
-  {
-    # put all the fields in a dataframe
-    dfrating=data.frame(id=id,topquote=topquote,ratingdt=ratingdt,rating=rating,partialentry=partialentry)
-    dfrating=cbind(dfrating,dfr)
-    dfrating$ratingnum=as.numeric(substr(dfrating$rating,1,1),1,1)
+  if (length(ids)>0)
+  {  
+  
+  for (i in 1:length(ids))
+     {
+      
     
+    #Značka
+            rlev <- try(member_info[[i]] %>%
+                               html_nodes(".levelBadge") %>% 
+                                      html_attr("class"))
+            
+            if (length(rlev)>0)
+            {
+              
+              rlev <- gsub("levelBadge badge lvl_","",rlev)
+              
+              rlev=try(as.integer(rlev))
+            }
+            else
+            {
+              rlev=0
+            }
+            rLevel=c(rLevel,rlev)
+            rLevel=rLevel [!rLevel %in% c("")]
+    
+    
+   
+    #Število hotelskih recenzij
+             rHotels <- try(member_info[[i]] %>%
+                               html_node(".contributionReviewBadge") %>% 
+                                       html_text())
+  
+                         if (length(rHotels)>0)
+                                   {
+  
+                                         rHotels <- gsub("\n","",rHotels)
+  
+                                         rHotels=ifelse(grepl("hotel", rHotels), as.integer(gsub("\\D","",rHotels, perl=TRUE)), 0)
+                                         }
+                          else
+                            {
+                              rHotels=0
+                            }
+            rHot=c(rHot,rHotels)
+            rHot=rHot [!rHot %in% c("")]
+            
+            
+            
+      #Helpful votes
+            rHelp <- try(member_info[[i]] %>%
+                                  html_node(".helpfulVotesBadge") %>% 
+                                  html_text())
+            
+           
+            
+            if (length(rHelp)>0)
+            {
+              rHelp=gsub("\n","",rHelp)
+              
+              rHelp=ifelse(grepl("helpful", rHelp), as.integer(gsub("\\D","",rHelp, perl=TRUE)), 0)
+            }
+            else
+            {
+              rHelp=0
+            }
+            rHel=c(rHel,rHelp)
+            rHel=rHel [!rHel %in% c("")]
+  
+     }
   }
   
-  return(dfrating)
   
-}
+ 
+  tmpDF<-data.frame(id, quote, rating, date, fullrev, rlocation, rLevel, rAll, rHot, rHel,  stringsAsFactors = FALSE)
+  tmpDF[,"drzava"]<-NA
+  
+  #poiščemo državo
+  
+  for (f in 1:nrow(tmpDF))
+  {
+    
+  
+    print(f)
+    #f=3
+    
+    lokacija<-as.list(unlist(strsplit(tmpDF[f,6], "[,]")))
+     
+     if (length(lokacija)>0)
+        {
+    
+              for (j in 1:length(lokacija))
+      
+               {
+    
+                      city.index<- match(lokacija[[j]], worldcities[,7])
+                      
+                      if (is.na(city.index))
+                        { city.index<-0}
+    
+                      drzava<-ifelse(city.index>0 ,worldcities[city.index,1 ],"Uknown")
+                      
+                      if (drzava!="uknown") 
+                        {
+                        tmpDF[f,c("drzava")]<-drzava 
+                           break
+                        }
+   
+              }
+    
+          }
+         else 
+         {
+           tmpDF[f,c("drzava")]<-"uknown" 
+         }
+    
+  }
+
+  tmpDF %>%View()
+  
+  rm("tmpDF")
+  rm("worldcities")
+  
+
+ 
+  
+  
+  
+ 
