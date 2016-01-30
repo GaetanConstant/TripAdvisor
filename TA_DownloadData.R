@@ -1,6 +1,7 @@
 # load libraries
 library(RCurl)
 library(XML)
+library(xml2)
 library(lubridate)
 library(ggplot2)
 library(pryr)
@@ -31,7 +32,7 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 1:3) 
+for (stevec in 1:length(hotelsid)) 
 {
   
   #stevec=1
@@ -58,10 +59,10 @@ for (stevec in 1:3)
   
   for (i in 1:(length(urllink))) {
     
-    if (i>1) {break}
+    ##if (i>1) {break}
     print(i)
     dfrating.l[[i]] = try(getTAdata(urllink[i], worldcities))
-    if (length(dfrating)==0) {break}
+    if (length(dfrating.l[[i]])==0) {break}
     
   }
   
