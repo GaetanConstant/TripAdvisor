@@ -79,9 +79,6 @@ getFullRev <- function(id) {
 getTAdata<-function(url,worldcities)
 {
   
-  try(rm(tmpDF), silent = TRUE)
-  tmpDF=c("")
-  
   
   reviews <- url %>% read_html() %>% html_nodes("#REVIEWS .innerBubble")
   
@@ -362,6 +359,7 @@ getTAdata<-function(url,worldcities)
   rAttr=as.numeric(rAttr)
   rFood=as.numeric(rFood)
   rHel=as.numeric(rHel)
+  rLevel=as.numeric(rLevel)
   
   
   tmpDF <- data.frame(id, quote, rating, date, fullrev, rlocation, rLevel, rAllReviewes, rHot,rAttr,rFood, rHel,rStarost,rGender,rPoint, rTags, stringsAsFactors = FALSE)
@@ -393,16 +391,20 @@ getTAdata<-function(url,worldcities)
         }
         
         drzava <- ifelse(city.index > 0, worldcities[city.index, 1], "Uknown")
+       
+         #če je namibija, je poblem, zato, dam v string
+        if (is.na(drzava))
+        {drzava<-"NA"}
         
         if (drzava != "uknown") {
-          tmpDF[f, c("drzava")] <- drzava
+          tmpDF[f, c("State")] <- drzava
           break
         }
         
       }
       
     } else {
-      tmpDF[f, c("drzava")] <- "uknown"
+      tmpDF[f, c("State")] <- "uknown"
     }
     
   }

@@ -20,7 +20,7 @@ worldcities = read.csv(file = "worldcities.csv", header = TRUE, stringsAsFactors
 # podatki o hotelih
 datah = read.csv(file = "Hoteli.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
 
-hotelid = gsub(" ", "", paste(datah$Regija, datah$Hotel, sep = ""), fixed = TRUE)
+hotelid = gsub(" ", "", paste(datah$Regija,datah$Lokacija, datah$Hotel, sep = ""), fixed = TRUE)
 datah = cbind(datah, hotelid)
 
 hotelsid = as.list(datah$hotelid)
@@ -33,7 +33,7 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 5:length(hotelsid)) 
+for (stevec in 82:length(hotelsid)) 
   {
   
   #stevec=1
