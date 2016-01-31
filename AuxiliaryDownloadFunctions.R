@@ -219,19 +219,19 @@ getTAdata<-function(url,worldcities)
       rStarost = rStarost[!rStarost %in% c("")]
       
       
-      #Spol
+      #Spol - dodal sem še ostalo, bom kasneje sfilitriral
       rOst<-try(member%>% html_nodes(".ageSince")%>% html_text())
       
       if (length(rOst) > 0) {
         
         rOst <- gsub("\n", "", rOst)
         
-        rG = ifelse(grepl("female", rOst), "Female", 
+        rOst = ifelse(grepl("female", rOst), "Female", 
                     ifelse(grepl("male", rOst),"Male",NA))
       } else {
-        rStar = NA
+        rOst = NA
       }
-      rGender = c(rGender, rG)
+      rGender = c(rGender, rOst)
       rGender = rGender[!rGender %in% c("")]
       
       #Tagi

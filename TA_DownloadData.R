@@ -33,7 +33,7 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 82:length(hotelsid)) 
+for (stevec in 104:length(hotelsid)) 
   {
   
   #stevec=1
@@ -107,6 +107,7 @@ podatki_s=lapply(datoteke,function(x) {
   
   if (file.exists(filenm))
   {
+    print(x)
     load(filenm)
     return(dfrating)
     
@@ -115,7 +116,8 @@ podatki_s=lapply(datoteke,function(x) {
 
 ##celotne podatke izvozim v Excelovo datoteko
 podatki=as.data.frame(try(do.call(rbind,podatki_s)))
-write.xlsx(x = podatki, file = "TA.xlsx",
-           sheetName = "Podatki", row.names = FALSE, append=FALSE)
+# write.xlsx(x = podatki, file = "TA.xlsx",
+#            sheetName = "Podatki", row.names = FALSE, append=FALSE)
 
+write.table(podatki, file = "TA.txt", append = FALSE, quote = TRUE, sep = "|")
 
