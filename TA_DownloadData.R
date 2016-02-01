@@ -33,7 +33,7 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 104:length(hotelsid)) 
+for (stevec in 105:length(hotelsid)) 
   {
   
   #stevec=1
@@ -95,6 +95,12 @@ for (stevec in 104:length(hotelsid))
 } 
 
 
+######################Konec downloada##########################################
+################################################################################
+#################################################################################
+
+##############Uvoz...........
+
 #Vse skupaj dam v eno datoteko
 datoteke<- list.files( pattern="*.Rda", full.names=FALSE)
 datoteke<-gsub(".Rda","",datoteke)
@@ -107,17 +113,46 @@ podatki_s=lapply(datoteke,function(x) {
   
   if (file.exists(filenm))
   {
-    print(x)
+    print(filenm)
     load(filenm)
     return(dfrating)
     
   }
 })
 
+
+
 ##celotne podatke izvozim v Excelovo datoteko
 podatki=as.data.frame(try(do.call(rbind,podatki_s)))
+
+#naredim par izračunov
+
+#starost in datumi
+podatki[,c("Age_of_reviewer")]<-NA
+podatki[,c("Reviews")]<-NA
+
+
+for (i in 1:nrow(podatki))
+{
+  podatki[i,c("Age_of_reviewer")]<-ObdelajStarost(podatki[i,c("Gender")])
+  podatki[i,c("Member_since")]<-ObdelajDatume(podatki[i,c("Member_since")])
+  
+  nrev<-max(podatki[i,c("Hotel_reviews")],podatki[i,c("Attraction_reviews")],podatki[i,c("Restaurant_reviews")], na.rm = TRUE)
+  
+  nrev<-ifelse(nrev==-Inf,0,nrev)
+  
+  podatki[i,c("Reviews")]<-nrev
+}
+
+podatki[,c("Gender")]<-ifelse(grepl("female", podatki[,c("Gender")]), "Female", ifelse(grepl("male", podatki[,c("Gender")]),"Male",NA))
+
+podatki[,c("Hotel_reviews")]<-NULL
+podatki[,c("Attraction_reviews")]<-NULL
+podatki[,c("Restaurant_reviews")]<-NULL
+podatki[,c("Tip")]<-NULL
+
+
 # write.xlsx(x = podatki, file = "TA.xlsx",
 #            sheetName = "Podatki", row.names = FALSE, append=FALSE)
 
-write.table(podatki, file = "TA.txt", append = FALSE, quote = TRUE, sep = "|")
-
+write.table(podatki, file = "TA.txt", append = FALSE, quote = TRUE, sep = ";", row.names = FALSE)
