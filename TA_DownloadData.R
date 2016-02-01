@@ -122,7 +122,7 @@ podatki=as.data.frame(try(do.call(rbind,podatki_s)))
 
 
 #Predobdelam podatke
-  ObdelajPodatke()
-
+  ObdelajPodatke(podatki)
+  names(podatki)
 
 write.table(podatki, file = "TA.txt", append = FALSE, quote = TRUE, sep = ";", row.names = FALSE)
