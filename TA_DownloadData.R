@@ -120,39 +120,16 @@ podatki_s=lapply(datoteke,function(x) {
   }
 })
 
-
-
 ##celotne podatke izvozim v Excelovo datoteko
 podatki=as.data.frame(try(do.call(rbind,podatki_s)))
 
-#naredim par izračunov
-
-#starost in datumi
-podatki[,c("Age_of_reviewer")]<-NA
-podatki[,c("Reviews")]<-NA
 
 
-for (i in 1:nrow(podatki))
-{
-  podatki[i,c("Age_of_reviewer")]<-ObdelajStarost(podatki[i,c("Gender")])
-  podatki[i,c("Member_since")]<-ObdelajDatume(podatki[i,c("Member_since")])
+#Predobdelam podatke
+  ObdelajPodatke()
+
   
-  nrev<-max(podatki[i,c("Hotel_reviews")],podatki[i,c("Attraction_reviews")],podatki[i,c("Restaurant_reviews")], na.rm = TRUE)
-  
-  nrev<-ifelse(nrev==-Inf,0,nrev)
-  
-  podatki[i,c("Reviews")]<-nrev
-}
-
-podatki[,c("Gender")]<-ifelse(grepl("female", podatki[,c("Gender")]), "Female", ifelse(grepl("male", podatki[,c("Gender")]),"Male",NA))
-
-podatki[,c("Hotel_reviews")]<-NULL
-podatki[,c("Attraction_reviews")]<-NULL
-podatki[,c("Restaurant_reviews")]<-NULL
-podatki[,c("Tip")]<-NULL
-
-
-# write.xlsx(x = podatki, file = "TA.xlsx",
+  # write.xlsx(x = podatki, file = "TA.xlsx",
 #            sheetName = "Podatki", row.names = FALSE, append=FALSE)
 
 write.table(podatki, file = "TA.txt", append = FALSE, quote = TRUE, sep = ";", row.names = FALSE)
