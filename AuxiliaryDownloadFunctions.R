@@ -176,6 +176,11 @@ ObdelajPodatke <- function (podatki) {
     podatki[i,c("Age_of_reviewer")]<<-ObdelajStarost(podatki[i,c("Gender")])
     podatki[i,c("Member_since")]<<-ObdelajDatume(podatki[i,c("Member_since")])
     
+#     podatki[i,c("Hotel_reviews")]<<-ifelse(is.na(podatki[i,c("Hotel_reviews")]),0,podatki[i,c("Hotel_reviews")])
+#     podatki[i,c("Attraction_reviews")]<<-ifelse(is.na(podatki[i,c("Attraction_reviews")]),0,podatki[i,c("Attraction_reviews")])
+#     podatki[i,c("Restaurant_reviews")]<<-ifelse(is.na(podatki[i,c("Restaurant_reviews")]),0,podatki[i,c("Restaurant_reviews")])
+#     
+    
     nrev<<-max(podatki[i,c("Hotel_reviews")],podatki[i,c("Attraction_reviews")],podatki[i,c("Restaurant_reviews")], na.rm = TRUE)
     
     nrev<<-ifelse(nrev==-Inf,0,nrev)

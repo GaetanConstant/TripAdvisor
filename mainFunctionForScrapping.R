@@ -142,9 +142,9 @@ getTAdata<-function(url,worldcities)
         
         
         #Spol - dodal sem še ostalo, bom kasneje sfilitriral
-        rOst<-try(member%>% html_nodes(".ageSince")%>% html_text())
+        rOst<-try(member%>% html_nodes(".ageSince")%>% html_text(), silent = TRUE)
         
-        if (length(rOst) > 0) {
+        if (length(rOst) > 0 && class(rOst)=="character") {
           
           rOst <- gsub("\n", "", rOst)
           
@@ -174,7 +174,7 @@ getTAdata<-function(url,worldcities)
         # Značka
         rlev <- try(member_info[[i]] %>% html_nodes(".levelBadge") %>% html_attr("class"), silent = TRUE)
         
-        if (length(rlev) > 0) {
+        if (length(rlev) > 0 && class(rlev)=="character")  {
           
           rlev <- gsub("levelBadge badge lvl_", "", rlev)
           
@@ -211,7 +211,7 @@ getTAdata<-function(url,worldcities)
         # Število hotelskih recenzij
         rHotels <- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text(), silent = TRUE)
         
-        if (length(rHotels) > 0) {
+        if (length(rHotels) > 0 && class(rHotels)=="character")  {
           
           rHotels <- gsub("\n", "", rHotels)
           
@@ -227,7 +227,7 @@ getTAdata<-function(url,worldcities)
         # Število recenzij atrakcij
         rAttraction<- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text(), silent = TRUE)
         
-        if (length(rAttraction) > 0) {
+        if (length(rAttraction) > 0 && class(rAttraction)=="character") {
           
           rAttraction <- gsub("\n", "", rAttraction)
           
@@ -243,7 +243,7 @@ getTAdata<-function(url,worldcities)
         # Število recenzij restavracij
         rFod<- try(member_info[[i]] %>% html_node(".contributionReviewBadge") %>% html_text(), silent = TRUE)
         
-        if (length(rFod) > 0) {
+        if (length(rFod) > 0 && class(rFod)=="character") {
           
           rFod <- gsub("\n", "", rFod)
           
@@ -259,11 +259,11 @@ getTAdata<-function(url,worldcities)
         
         
         # Helpful votes
-        rHelp <- try(member_info[[i]] %>% html_node(".helpfulVotesBadge") %>% html_text())
+        rHelp <- try(member_info[[i]] %>% html_node(".helpfulVotesBadge") %>% html_text(), silent = TRUE)
         
         
         
-        if (length(rHelp) > 0) {
+        if (length(rHelp) > 0 && class(rHelp)=="character") {
           rHelp = gsub("\n", "", rHelp)
           
           rHelp = ifelse(grepl("helpful", rHelp), as.integer(gsub("\\D", "", rHelp, perl = TRUE)), NA)
@@ -293,43 +293,43 @@ getTAdata<-function(url,worldcities)
     
     # poiščemo državo
     
-    for (f in 1:nrow(tmpDF)) {
-      
-      
-      #print(f)
-      # f=3
-      
-      lokacija <- as.list(unlist(strsplit(tmpDF[f, 6], "[,]")))
-      
-      if (length(lokacija) > 0) {
-        
-        for (j in 1:length(lokacija)) 
-        {
-          
-          city.index <- match(lokacija[[j]], worldcities[, 7])
-          
-          if (is.na(city.index)) {
-            city.index <- 0
-          }
-          
-          drzava <- ifelse(city.index > 0, worldcities[city.index, 1], "Uknown")
-          
-          #če je namibija, je poblem, zato, dam v string
-          if (is.na(drzava))
-          {drzava<-"NA"}
-          
-          if (drzava != "uknown") {
-            tmpDF[f, c("State")] <- drzava
-            break
-          }
-          
-        }
-        
-      } else {
-        tmpDF[f, c("State")] <- "uknown"
-      }
-      
-    }
+    #   for (f in 1:nrow(tmpDF)) {
+    #     
+    #     
+    #     #print(f)
+    #     # f=3
+    #     
+    #     lokacija <- as.list(unlist(strsplit(tmpDF[f, 6], "[,]")))
+    #     
+    #     if (length(lokacija) > 0) {
+    #       
+    #       for (j in 1:length(lokacija)) 
+    #       {
+    #         
+    #         city.index <- match(lokacija[[j]], worldcities[, 7])
+    #         
+    #         if (is.na(city.index)) {
+    #           city.index <- 0
+    #         }
+    #         
+    #         drzava <- ifelse(city.index > 0, worldcities[city.index, 1], "Uknown")
+    #        
+    #          #če je namibija, je poblem, zato, dam v string
+    #         if (is.na(drzava))
+    #         {drzava<-"NA"}
+    #         
+    #         if (drzava != "uknown") {
+    #           tmpDF[f, c("State")] <- drzava
+    #           break
+    #         }
+    #         
+    #       }
+    
+    #     } else {
+    #       tmpDF[f, c("State")] <- "uknown"
+    #     }
+    
+    # }
     
   }
   if (class(tmpDF)!="data.frame")
