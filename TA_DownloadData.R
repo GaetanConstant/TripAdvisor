@@ -9,6 +9,7 @@ library(rvest)
 library(xlsx)
 library("zoo")
 source("AuxiliaryDownloadFunctions.R")
+source("mainFunctionForScrapping.R")
 
 
 options(stringsAsFactors = FALSE, silent=TRUE)
@@ -99,15 +100,13 @@ for (stevec in 105:length(hotelsid))
 ################################################################################
 #################################################################################
 
-##############Uvoz...........
+
 
 #Vse skupaj dam v eno datoteko
 datoteke<- list.files( pattern="*.Rda", full.names=FALSE)
 datoteke<-gsub(".Rda","",datoteke)
 try(rm(podatki_s), silent = TRUE)
 try(rm(podatki), silent = TRUE)
-
-
 podatki_s=lapply(datoteke,function(x) {
   filenm=paste(as.character(x),".Rda",sep="")
   
@@ -119,17 +118,11 @@ podatki_s=lapply(datoteke,function(x) {
     
   }
 })
-
-##celotne podatke izvozim v Excelovo datoteko
 podatki=as.data.frame(try(do.call(rbind,podatki_s)))
-
 
 
 #Predobdelam podatke
   ObdelajPodatke()
 
-  
-  # write.xlsx(x = podatki, file = "TA.xlsx",
-#            sheetName = "Podatki", row.names = FALSE, append=FALSE)
 
 write.table(podatki, file = "TA.txt", append = FALSE, quote = TRUE, sep = ";", row.names = FALSE)
