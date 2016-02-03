@@ -33,10 +33,10 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 1:length(hotelsid)) 
+for (stevec in 15:length(hotelsid)) 
   {
   
-  #stevec=1
+  #stevec=5
   
   pickhotel = hotelsid[[stevec]]
   
@@ -48,14 +48,17 @@ for (stevec in 1:length(hotelsid))
   urllink = createLinks(datah[datah$hotelid == pickhotel, 1])
   
   stkorakov=length(urllink)
-  
+
   a <- 1:stkorakov
-  b <- a[seq(1, length(a), 20)]
+  
+  if (stkorakov>100)
+  {b <- a[seq(1, length(a), 100)]} else
+  {b <- a[seq(1, length(a), stkorakov)]}
+  
   b<-b[-1]
   korakSave<-unique(c(b,length(a)))
   
-  if (is.element(i,korakSave))
-  {}
+
   
   if (stkorakov==0)
   { next 
@@ -75,10 +78,10 @@ for (stevec in 1:length(hotelsid))
     print("Korak...")
     print(i)
     dfrating.l[[i]] = try(getTAdata(urllink[i]))
-    if (length(dfrating.l[[i]])==0) {break} 
     
-    ###Zaradi varnosti pri velikem številu korakov, snemam vsak 20 korak
-    if (stkorakov>50)
+    
+    ###Zaradi varnosti pri velikem številu korakov, snemam vsak 100 korak
+    if (stkorakov>120)
     {
       
       if (is.element(i,korakSave))
@@ -118,7 +121,9 @@ for (stevec in 1:length(hotelsid))
 
   
   
-  if (length(dfrating)>0 && stkorakov<=50 ) {
+  if (stkorakov<=120 ) {
+    
+    
     
     dfrating = try(do.call(rbind, dfrating.l))
     names(dfrating)
@@ -129,6 +134,8 @@ for (stevec in 1:length(hotelsid))
     
     dfrating=cbind(dfrating,datah[datah$hotelid==pickhotel,c(2,3,4,5)])
     head(dfrating)
+    
+    print("Shranjevanje.....")
     
     # save to Rdataset
     filenm = paste("dfrating_", pickhotel, ".Rda", sep = "")
