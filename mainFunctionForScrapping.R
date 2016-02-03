@@ -1,4 +1,4 @@
-getTAdata<-function(url,worldcities)
+getTAdata<-function(url)
 {
   
   

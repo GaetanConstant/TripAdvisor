@@ -2,7 +2,6 @@
 library(RCurl)
 library(XML)
 library(xml2)
-library(lubridate)
 library(ggplot2)
 library(pryr)
 library(rvest)
@@ -34,7 +33,7 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 105:length(hotelsid)) 
+for (stevec in 2:length(hotelsid)) 
   {
   
   #stevec=1
@@ -48,7 +47,17 @@ for (stevec in 105:length(hotelsid))
   ## Kreiranje linkov
   urllink = createLinks(datah[datah$hotelid == pickhotel, 1])
   
-  if (length(urllink)==0)
+  stkorakov=length(urllink)
+  
+  a <- 1:stkorakov
+  b <- a[seq(1, length(a), 20)]
+  b<-b[-1]
+  korakSave<-unique(c(b,length(a)))
+  
+  if (is.element(i,korakSave))
+  {}
+  
+  if (stkorakov==0)
   { next 
   }
   
@@ -61,21 +70,59 @@ for (stevec in 105:length(hotelsid))
   
   for (i in 1:(length(urllink))) {
     
+    #i=121
     ##if (1) {break}
     print("Korak...")
     print(i)
-    dfrating.l[[i]] = try(getTAdata(urllink[i], worldcities))
-    if (length(dfrating.l[[i]])==0) {break}
+    dfrating.l[[i]] = try(getTAdata(urllink[i]))
+    if (length(dfrating.l[[i]])==0) {break} 
+    
+    ###Zaradi varnosti pri velikem številu korakov, snemam vsak 20 korak
+    if (stkorakov>50)
+    {
+      
+      if (is.element(i,korakSave))
+      {
+        
+        dfrating = try(do.call(rbind, dfrating.l))
+        
+        dfrating = dfrating[!is.na(dfrating$id), ]
+        
+        dfrating=cbind(dfrating,datah[datah$hotelid==pickhotel,c(2,3,4,5)])
+        
+        print("Shranjevanje.....")
+        print(i)
+        
+        filenm = paste("dfrating_", pickhotel, "_",i,".Rda", sep = "")
+        save(dfrating, file = filenm)
+        
+        try(mem_change(rm("dfrating")))
+        try(mem_change(rm("dfrating.l")))
+        try(gc())
+        
+        
+        dfrating=as.data.frame(NULL)
+        
+        dfrating.l = as.list(rep(NA, length(length(urllink))))
+        
+      }
+      
+      
+    }
+    
+    
     
   }
   
   
-  dfrating = try(do.call(rbind, dfrating.l))
-  names(dfrating)
+
   
   
-  
-  if (length(dfrating) > 0) {
+  if (length(dfrating)>0 && stkorakov<=50 ) {
+    
+    dfrating = try(do.call(rbind, dfrating.l))
+    names(dfrating)
+    
     
     # removing NA
     dfrating = dfrating[!is.na(dfrating$id), ]
