@@ -33,7 +33,7 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 2:length(hotelsid)) 
+for (stevec in 1:length(hotelsid)) 
   {
   
   #stevec=1

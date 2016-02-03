@@ -62,6 +62,8 @@ getFullRev <- function(id) {
     urlfull <- urlPrepare(url, id)
     
     
+
+    
     # get html content of page containing full review
     doc = htmlTreeParse(urlfull, useInternalNodes = TRUE)
     # extract node set containing full review
@@ -69,10 +71,19 @@ getFullRev <- function(id) {
     qry = paste("//p[@id='", revid, "']", sep = "")
     ns_fullrev = getNodeSet(doc, qry)
     
+    if (length(ns_fullrev)>0)
+    {      r=xmlValue(ns_fullrev[[1]])
     
-    fullrev = xmlValue(ns_fullrev[[1]])
+           r=(gsub("\n", "", r))
     
-    return(gsub("\n", "", fullrev))
+    } else {
+
+      r=NA
+      
+    }
+    
+    return (r)
+
     
 }
 
