@@ -176,6 +176,22 @@ ObdelajDatume<-function(x)
 
 ObdelajPodatke <- function (podatki) {
   #naredim par izračunov
+  ##najprej generiram nove stolpce
+  tagi<-podatki[!is.na(podatki$Tags),c("Tags")]
+  tagi<-unique(unlist(strsplit(tagi,",")))
+  tagi<-as.list(str_trim(tagi, side=c("both")))
+  
+  for (i in 1:length(tagi))
+  {
+    ime<-tagi[[i]]
+    stevilo<-NA
+    podatki<-cbind(podatki,stevilo)
+    names(podatki)[ncol(podatki)]<-ime
+    
+  }
+  
+  
+  
   
   #starost in datumi
   podatki[,c("Age_of_reviewer")]<-NA
@@ -217,8 +233,9 @@ ObdelajPodatke <- function (podatki) {
   podatki[,c("Attraction_reviews")]<-NULL
   podatki[,c("Restaurant_reviews")]<-NULL
   podatki[,c("Tip")]<-NULL
-  colnames(podatki)[20]<-"Liu"
-  colnames(podatki)[21]<-"St_besed"
+  stolpci<-ncol(podatki) 
+  colnames(podatki)[stolpci-1]<-"Liu"
+  colnames(podatki)[stolpci]<-"St_besed"
   
   return(podatki)
   
