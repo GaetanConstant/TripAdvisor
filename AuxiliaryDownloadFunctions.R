@@ -178,31 +178,48 @@ ObdelajPodatke <- function (podatki) {
   #naredim par izračunov
   
   #starost in datumi
-  podatki[,c("Age_of_reviewer")]<<-NA
-  podatki[,c("Reviews")]<<-NA
+  podatki[,c("Age_of_reviewer")]<-NA
+  podatki[,c("Reviews")]<-NA
   
+  podatki[is.na(podatki$Hotel_reviews),c("Hotel_reviews")]<-0
+  podatki[is.na(podatki$Attraction_reviews),c("Attraction_reviews")]<-0
+  podatki[is.na(podatki$Restaurant_reviews),c("Restaurant_reviews")]<-0
+  
+  
+  sentimentAll=list()
+
   
   for (i in 1:nrow(podatki))
   {
-    podatki[i,c("Age_of_reviewer")]<<-ObdelajStarost(podatki[i,c("Gender")])
-    podatki[i,c("Member_since")]<<-ObdelajDatume(podatki[i,c("Member_since")])
+    podatki[i,c("Age_of_reviewer")]<-ObdelajStarost(podatki[i,c("Gender")])
+    podatki[i,c("Member_since")]<-ObdelajDatume(podatki[i,c("Member_since")])
     
-#     podatki[i,c("Hotel_reviews")]<<-ifelse(is.na(podatki[i,c("Hotel_reviews")]),0,podatki[i,c("Hotel_reviews")])
-#     podatki[i,c("Attraction_reviews")]<<-ifelse(is.na(podatki[i,c("Attraction_reviews")]),0,podatki[i,c("Attraction_reviews")])
-#     podatki[i,c("Restaurant_reviews")]<<-ifelse(is.na(podatki[i,c("Restaurant_reviews")]),0,podatki[i,c("Restaurant_reviews")])
-#     
+    nrev<-max(podatki[i,c("Hotel_reviews")],podatki[i,c("Attraction_reviews")],podatki[i,c("Restaurant_reviews")], na.rm = TRUE)
     
-    nrev<<-max(podatki[i,c("Hotel_reviews")],podatki[i,c("Attraction_reviews")],podatki[i,c("Restaurant_reviews")], na.rm = TRUE)
+    nrev<-ifelse(nrev==-Inf,0,nrev)
     
-    nrev<<-ifelse(nrev==-Inf,0,nrev)
+    podatki[i,c("Reviews")]<-nrev
     
-    podatki[i,c("Reviews")]<<-nrev
+    #Obdelava sentimenta
+    
+    sentimentAll[[i]]<-getSentiment(podatki[i,c("fullrev")])
+    
+    print("Obdelava vrstice...")
+    print(i)
   }
   
-  podatki[,c("Gender")]<<-ifelse(grepl("female", podatki[,c("Gender")]), "Female", ifelse(grepl("male", podatki[,c("Gender")]),"Male",NA))
+
+  podatki<-cbind(podatki,do.call(rbind,sentimentAll))
   
-  podatki[,c("Hotel_reviews")]<<-NULL
-  podatki[,c("Attraction_reviews")]<<-NULL
-  podatki[,c("Restaurant_reviews")]<<-NULL
-  podatki[,c("Tip")]<<-NULL
+  podatki[,c("Gender")]<-ifelse(grepl("female", podatki[,c("Gender")]), "Female", ifelse(grepl("male", podatki[,c("Gender")]),"Male",NA))
+  
+  podatki[,c("Hotel_reviews")]<-NULL
+  podatki[,c("Attraction_reviews")]<-NULL
+  podatki[,c("Restaurant_reviews")]<-NULL
+  podatki[,c("Tip")]<-NULL
+  colnames(podatki)[20]<-"Liu"
+  colnames(podatki)[21]<-"St_besed"
+  
+  return(podatki)
+  
 }
