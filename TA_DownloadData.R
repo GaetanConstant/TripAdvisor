@@ -15,10 +15,11 @@ options(stringsAsFactors = FALSE, silent=TRUE)
 
 
 #podatki za mesta in države
-worldcities = read.csv(file = "worldcities.csv", header = TRUE, stringsAsFactors = FALSE)
+worldcities = read.csv(file = "./lookups/worldcities.csv", header = TRUE, stringsAsFactors = FALSE)
 
 # podatki o hotelih
-datah = read.csv(file = "Hoteli.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+datah = read.csv(file = "./lookups/Hoteli.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+AFINN = read.csv(file = "./lookups/AFINN.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
 
 hotelid = gsub(" ", "", paste(datah$Regija,datah$Lokacija, datah$Hotel, sep = ""), fixed = TRUE)
 datah = cbind(datah, hotelid)
