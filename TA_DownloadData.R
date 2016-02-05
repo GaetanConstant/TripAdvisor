@@ -17,6 +17,11 @@ options(stringsAsFactors = FALSE, silent=TRUE)
 #podatki za mesta in države
 worldcities = read.csv(file = "./lookups/worldcities.csv", header = TRUE, stringsAsFactors = FALSE)
 
+#podatki za čustveno analizo
+positive=scan("./lookups/positive-words.txt",what="character",comment.char=";")
+
+negative=scan("./lookups/negative-words.txt",what="character",comment.char=";")
+
 # podatki o hotelih
 datah = read.csv(file = "./lookups/Hoteli.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
 AFINN = read.csv(file = "./lookups/AFINN.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
