@@ -210,15 +210,49 @@ ObdelajPodatke <- function (podatki) {
     podatki[i,c("Age_of_reviewer")]<-ObdelajStarost(podatki[i,c("Gender")])
     podatki[i,c("Member_since")]<-ObdelajDatume(podatki[i,c("Member_since")])
     
+    #####################Obdelava tagov #####################################
+    tagiVrstica<-podatki[i,c("Tags")]
+    tagiVrstica<-unique(unlist(strsplit(tagiVrstica,",")))
+    tagiVrstica<-as.list(str_trim(tagiVrstica, side=c("both")))
+    
+    
+    for (j in 1:length(tagi))
+    {
+      
+      if (length(intersect(unlist(tagi),unlist(tagiVrstica)))>0)
+      {
+         if (length(intersect(tagi[[j]],unlist(tagiVrstica)))>0)
+         {
+           podatki[i,tagi[[j]]]<-1
+           
+         } else {
+           
+           podatki[i,tagi[[j]]]<-0
+           
+         }
+        
+      } else {
+        
+        podatki[i,tagi[[j]]]<-NA
+      }
+
+      
+    }
+    
+    #######################################################################################
+    
     nrev<-max(podatki[i,c("Hotel_reviews")],podatki[i,c("Attraction_reviews")],podatki[i,c("Restaurant_reviews")], na.rm = TRUE)
     
     nrev<-ifelse(nrev==-Inf,0,nrev)
     
     podatki[i,c("Reviews")]<-nrev
     
-    #Obdelava sentimenta
+    ############################Obdelava sentimenta Liu#######################################
     
     sentimentAll[[i]]<-getSentiment(podatki[i,c("fullrev")])
+    
+    
+    ############################Obdelava sentimenta AFINN#######################################
     
     print("Obdelava vrstice...")
     print(i)
@@ -232,6 +266,7 @@ ObdelajPodatke <- function (podatki) {
   podatki[,c("Hotel_reviews")]<-NULL
   podatki[,c("Attraction_reviews")]<-NULL
   podatki[,c("Restaurant_reviews")]<-NULL
+  podatki[,c("Tags")]<-NULL
   podatki[,c("Tip")]<-NULL
   stolpci<-ncol(podatki) 
   colnames(podatki)[stolpci-1]<-"Liu"
