@@ -178,8 +178,8 @@ ObdelajPodatke <- function (podatki) {
   #naredim par izračunov
   ##najprej generiram nove stolpce
   tagi<-podatki[!is.na(podatki$Tags),c("Tags")]
-  tagi<-unique(unlist(strsplit(tagi,",")))
-  tagi<-as.list(str_trim(tagi, side=c("both")))
+  tagi<-unlist(strsplit(tagi,","))
+  tagi<-as.list(unique(str_trim(tagi, side=c("both"))))
   
   for (i in 1:length(tagi))
   {
@@ -212,8 +212,8 @@ ObdelajPodatke <- function (podatki) {
     
     #####################Obdelava tagov #####################################
     tagiVrstica<-podatki[i,c("Tags")]
-    tagiVrstica<-unique(unlist(strsplit(tagiVrstica,",")))
-    tagiVrstica<-as.list(str_trim(tagiVrstica, side=c("both")))
+    tagiVrstica<-unlist(strsplit(tagiVrstica,","))
+    tagiVrstica<-as.list(unique(str_trim(tagiVrstica, side=c("both"))))
     
     
     for (j in 1:length(tagi))
