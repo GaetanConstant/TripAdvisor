@@ -39,7 +39,7 @@ hotelsid = as.list(datah$hotelid)
 
 # pick hotel for which review data is to be extracted choices: jwmarriott,hamptoninn,conrad
 
-for (stevec in 15:length(hotelsid)) 
+for (stevec in 21:length(hotelsid)) 
   {
   
   #stevec=5
@@ -155,7 +155,6 @@ for (stevec in 15:length(hotelsid))
   
 } 
 
-
 ######################Konec downloada##########################################
 ################################################################################
 #################################################################################
@@ -163,12 +162,12 @@ for (stevec in 15:length(hotelsid))
 
 
 #Vse skupaj dam v eno datoteko
-datoteke<- list.files( pattern="*.Rda", full.names=FALSE)
+datoteke<- list.files(path="./data", pattern="*.Rda", full.names=FALSE)
 datoteke<-gsub(".Rda","",datoteke)
 try(rm(podatki_s), silent = TRUE)
 try(rm(podatki), silent = TRUE)
 podatki_s=lapply(datoteke,function(x) {
-  filenm=paste(as.character(x),".Rda",sep="")
+  filenm=paste("./data/",as.character(x),".Rda",sep="")
   
   if (file.exists(filenm))
   {
@@ -180,9 +179,22 @@ podatki_s=lapply(datoteke,function(x) {
 })
 podatki=as.data.frame(try(do.call(rbind,podatki_s)))
 
+nrow(podatki)
+
+##Obdržim samo unikatne vrstice
+podatki<-unique(podatki)
+
+nrow(podatki)
+
+#Izvržem prazne fullrev
+podatki<-podatki[!is.na(podatki$fullrev),]
+
+nrow(podatki)
+podatki<-head(podatki,10)
+
 
 #Predobdelam podatke
-  ObdelajPodatke(podatki)
-  names(podatki)
+  results<-ObdelajPodatke(podatki)
+  names(results)
 
-write.table(podatki, file = "TA.txt", append = FALSE, quote = TRUE, sep = ";", row.names = FALSE)
+write.table(results, file = "./outputs/TA.txt", append = FALSE, quote = TRUE, sep = ";", row.names = FALSE)
