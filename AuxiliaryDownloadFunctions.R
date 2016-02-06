@@ -174,7 +174,7 @@ ObdelajDatume<-function(x)
 }
 
 
-ObdelajPodatke <- function (podatki) {
+ObdelajPodatke <- function (podatki,worldcities) {
   #naredim par izračunov
   ##najprej generiram nove stolpce
   tagi<-podatki[!is.na(podatki$Tags),c("Tags")]
@@ -202,12 +202,19 @@ ObdelajPodatke <- function (podatki) {
   podatki[is.na(podatki$Restaurant_reviews),c("Restaurant_reviews")]<-0
   
   
+  stanford<-list()
+  afinn<-list()
+  nrc<-list()
+  bing<-list()
+  noteSentiment<-list()
+  
   sentimentAll=list()
 
   
   for (i in 1:nrow(podatki))
   {
-    podatki[i,c("Age_of_reviewer")]<-ObdelajStarost(podatki[i,c("Gender")])
+    
+     podatki[i,c("Age_of_reviewer")]<-ObdelajStarost(podatki[i,c("Gender")])
     podatki[i,c("Member_since")]<-ObdelajDatume(podatki[i,c("Member_since")])
     
     #####################Obdelava tagov #####################################
@@ -253,12 +260,94 @@ ObdelajPodatke <- function (podatki) {
     
     
     ############################Obdelava sentimenta AFINN#######################################
+  
+    afinn[[i]]<-get_sentiment(as.vector(podatki[i,c("fullrev")]),"afinn")
+    
+    
+    ##########################Sentiment NRC####################################
+    nrc[[i]]<-get_sentiment(as.vector(podatki[i,c("fullrev")]),"nrc")
+
+    
+    ##########################Sentiment bing####################################
+    bing[[i]]<-get_sentiment(as.vector(podatki[i,c("fullrev")]),"bing")
+    
+    ##########################Stanford####################################
+    #stanford[[i]]<-get_sentiment  (as.vector(podatki[i,c("fullrev")]),"stanford","./lookups/stanford/")
+    
+    
+    
+    ########################Iskanje države#########################################3
+    
+   
+    lokacija <- unlist(strsplit(podatki[i, "location"], "[,]"))
+    lokacija <-as.list(str_trim(lokacija, side="both"))
+        
+        if (length(lokacija) > 0) {
+          
+          for (j in length(lokacija):1) 
+          {
+           
+            #Najprej grem po državah, ker jih je manj
+            city.index <- match(lokacija[[j]], worldcities[, 3])
+            
+            if (is.na(city.index)) {
+              city.index <- 0
+            }
+            
+            drzava <- ifelse(city.index > 0, worldcities[city.index, 3], "uknown")
+           
+            
+            if (drzava != "uknown") {
+              podatki[i, c("State")] <- drzava
+              break
+            }
+            
+          }
+          #Če je država unknown, grem gledat po mestih
+          if (drzava == "uknown")
+          {
+          for (n in 1:length(lokacija)) 
+          {
+           
+            #Najprej grem po državah, ker jih je manj
+            city.index <- match(lokacija[[n]], worldcities[, 1])
+            
+            if (is.na(city.index)) {
+              city.index <- 0
+            }
+            
+            drzava <- ifelse(city.index > 0, worldcities[city.index, 3], "Uknown")
+            
+            
+            if (drzava != "uknown") {
+              podatki[i, c("State")] <- drzava
+              break
+            }
+            
+          }
+          }
+    
+        } else {
+          podatki[i, c("State")] <- "uknown"
+        }
+  
+    
+       
+    
+    
     
     print("Obdelava vrstice...")
     print(i)
   }
   
-
+  #podatki<-cbind(podatki,do.call(rbind,stanford))
+  
+  podatki<-cbind(podatki,do.call(rbind,bing))
+  
+  podatki<-cbind(podatki,do.call(rbind,nrc))
+  
+  podatki<-cbind(podatki,do.call(rbind,afinn))
+  
   podatki<-cbind(podatki,do.call(rbind,sentimentAll))
   
   podatki[,c("Gender")]<-ifelse(grepl("female", podatki[,c("Gender")]), "Female", ifelse(grepl("male", podatki[,c("Gender")]),"Male",NA))
@@ -269,6 +358,10 @@ ObdelajPodatke <- function (podatki) {
   podatki[,c("Tags")]<-NULL
   podatki[,c("Tip")]<-NULL
   stolpci<-ncol(podatki) 
+ #colnames(podatki)[stolpci-4]<-"Stanford"
+  colnames(podatki)[stolpci-4]<-"BING"
+  colnames(podatki)[stolpci-3]<-"NRC"
+  colnames(podatki)[stolpci-2]<-"AFINN"
   colnames(podatki)[stolpci-1]<-"Liu"
   colnames(podatki)[stolpci]<-"St_besed"
   
@@ -361,3 +454,5 @@ score.sentiment = function(sentences, pos.words, neg.words, .progress="none")
   
   return(scores.df)
 }
+
+

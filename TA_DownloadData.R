@@ -1,5 +1,4 @@
 # load libraries
-library(RCurl)
 library(XML)
 library(xml2)
 library(ggplot2)
@@ -8,6 +7,8 @@ library(plyr)
 library(rvest)
 library(xlsx)
 library(stringr)
+library("syuzhet")
+library("tm")
 library("zoo")
 source("AuxiliaryDownloadFunctions.R")
 source("mainFunctionForScrapping.R")
@@ -17,7 +18,7 @@ options(stringsAsFactors = FALSE, silent=TRUE)
 
 
 #podatki za mesta in države
-#worldcities = read.csv(file = "./lookups/worldcities.csv", header = TRUE, stringsAsFactors = FALSE)
+worldcities = read.csv(file = "./lookups/countries.csv", header = TRUE, stringsAsFactors = FALSE,sep=";")
 
 #podatki za čustveno analizo
 positive=scan("./lookups/positive-words.txt",what="character",comment.char=";")
@@ -26,7 +27,7 @@ negative=scan("./lookups/negative-words.txt",what="character",comment.char=";")
 
 # podatki o hotelih
 datah = read.csv(file = "./lookups/Hoteli.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
-AFINN = read.csv(file = "./lookups/AFINN.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE)
+
 
 hotelid = gsub(" ", "", paste(datah$Regija,datah$Lokacija, datah$Hotel, sep = ""), fixed = TRUE)
 datah = cbind(datah, hotelid)
@@ -168,6 +169,8 @@ datoteke<- list.files(path="./data", pattern="*.Rda", full.names=FALSE)
 datoteke<-gsub(".Rda","",datoteke)
 try(rm(podatki_s), silent = TRUE)
 try(rm(podatki), silent = TRUE)
+
+
 podatki_s=lapply(datoteke,function(x) {
   filenm=paste("./data/",as.character(x),".Rda",sep="")
   
@@ -192,11 +195,16 @@ nrow(podatki)
 podatki<-podatki[!is.na(podatki$fullrev),]
 
 nrow(podatki)
-podatki<-head(podatki,10)
+#podatki<-head(podatki,10)
 
 
 #Predobdelam podatke
-  results<-ObdelajPodatke(podatki)
+  ptm <- proc.time()
+  results<-ObdelajPodatke(podatki,worldcities)
   names(results)
+  
+  final<-results[complete.cases(results),]
 
-write.table(results, file = "./outputs/TA.txt", append = FALSE, quote = TRUE, sep = ";", row.names = FALSE)
+write.table(final, file = "./outputs/TA.txt", append = FALSE, quote = TRUE, sep = ";", row.names = FALSE)
+
+proc.time() - ptm
